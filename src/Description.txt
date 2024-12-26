@@ -1,0 +1,146 @@
+                                Consumer (Споживач)
+                                    
+Consumer — це функціональний інтерфейс, який приймає один параметр на вхід і не повертає жодного вихідного значення. На простій мові,
+ як випливає з назви, реалізація цього інтерфейсу "споживає" вхідні дані. Інтерфейс Consumer має два методи:
+
+void accept(T t);
+default Consumer<T> andThen(Consumer<? super T> after);
+Метод accept є основним абстрактним методом (SAM), який приймає один аргумент типу T. Метод andThen є методом за замовчуванням і
+ використовується для комбінування декількох Consumer.
+
+Приклад використання Consumer:
+Ми створили реалізацію Consumer, яка отримує рядок і виводить його на екран. Метод forEach використовує реалізацію цього інтерфейсу.
+
+public void whenNamesPresentConsumeAll() {
+    Consumer<String> printConsumer = t -> System.out.println(t);
+    Stream<String> cities = Stream.of("Sydney", "Dhaka", "New York", "London");
+    cities.forEach(printConsumer);
+}
+Композиція кількох Consumer:
+У цьому прикладі створено двох Consumer: один перетворює список елементів на верхній регістр, інший виводить результат.
+
+public void whenNamesPresentUseBothConsumer() {
+    List<String> cities = Arrays.asList("Sydney", "Dhaka", "London");
+
+    Consumer<List<String>> upperCaseConsumer = list -> {
+        for (int i = 0; i < list.size(); i++) {
+            list.set(i, list.get(i).toUpperCase());
+        }
+    };
+    Consumer<List<String>> printConsumer = list -> list.stream()
+        .forEach(System.out::println);
+
+    upperCaseConsumer.andThen(printConsumer).accept(cities);
+}
+Існують специфічні реалізації Consumer для примітивних типів:
+
+IntConsumer: void accept(int x);
+DoubleConsumer: void accept(double x);
+LongConsumer: void accept(long x);
+
+
+
+                                Supplier (Постачальник)
+                                    
+Supplier — це простий функціональний інтерфейс, який визначає реалізацію, що "постачає" результат. Він не накладає жодних
+ додаткових умов на те, що саме має бути повернено.
+
+                            Методи Supplier:
+Основний метод: T get().
+Примітивні варіанти: getAsInt(), getAsDouble(), getAsLong(), getAsBoolean().
+Приклад використання Supplier:
+Реалізація Supplier, яка генерує випадкове число.
+
+public void supplier() {
+    Supplier<Double> doubleSupplier1 = () -> Math.random();
+    DoubleSupplier doubleSupplier2 = Math::random;
+
+    System.out.println(doubleSupplier1.get());
+    System.out.println(doubleSupplier2.getAsDouble());
+}
+
+Примітивні варіанти Supplier:
+
+IntSupplier: int getAsInt();
+DoubleSupplier: double getAsDouble();
+LongSupplier: long getAsLong();
+BooleanSupplier: boolean getAsBoolean();
+Приклад із відкладеним виконанням:
+Supplier часто використовується для відкладеного виконання, наприклад, у методі orElseGet класу Optional.
+
+public void supplierWithOptional() {
+    Supplier<Double> doubleSupplier = () -> Math.random();
+    Optional<Double> optionalDouble = Optional.empty();
+    System.out.println(optionalDouble.orElseGet(doubleSupplier));
+}
+
+
+                                    Predicate (Предикат)
+                                        
+Інтерфейс Predicate представляє собою логічну функцію, яка приймає аргумент і повертає логічне значення (true або false). Він 
+ найчастіше використовується для фільтрації даних у Java Streams. Метод filter в Stream API приймає Predicate для фільтрації
+ даних і повертає новий потік, що відповідає умовам предиката.
+
+Основний метод Predicate:
+
+boolean test(T t); — перевіряє умову та повертає логічний результат.
+
+Приклад використання Predicate:
+public void testPredicate() {
+    List<String> names = Arrays.asList("Smith", "Samueal", "Catley", "Sie");
+    Predicate<String> nameStartsWithS = str -> str.startsWith("S");
+    names.stream()
+         .filter(nameStartsWithS)
+         .forEach(System.out::println);
+}
+У цьому прикладі створено Predicate, який перевіряє, чи починається ім'я на літеру "S". Цей Predicate передається до методу filter.
+
+Композиція Predicate:
+Інтерфейс Predicate містить декілька корисних методів:
+
+default Predicate<T> and(Predicate<? super T> other); — повертає логічне "і".
+default Predicate<T> or(Predicate<? super T> other); — повертає логічне "або".
+default Predicate<T> negate(); — інвертує умову.
+static <T> Predicate<T> isEquals(Object targetRef); — перевіряє на рівність із заданим об'єктом.
+
+Приклад композиції Predicate:
+public void testPredicateAndComposition() {
+    List<String> names = Arrays.asList("Smith", "Samueal", "Catley", "Sie");
+    Predicate<String> startPredicate = str -> str.startsWith("S");
+    Predicate<String> lengthPredicate = str -> str.length() >= 5;
+
+    names.stream()
+         .filter(startPredicate.and(lengthPredicate))
+         .forEach(System.out::println);
+}
+Цей приклад перевіряє, чи ім'я починається на "S" і має довжину не менше 5 символів.
+
+
+    
+                                        Function (Функція)
+    
+Інтерфейс Function є загальним інтерфейсом для перетворення об'єктів. Він приймає один аргумент типу T і повертає
+ результат типу R. Головним методом інтерфейсу є:
+
+R apply(T t); — приймає аргумент і повертає результат.
+Цей інтерфейс часто використовується в методі map Stream API для перетворення елементів.
+
+Приклад використання Function:
+public void testFunctions() {
+    List<String> names = Arrays.asList("Smith", "Gourav", "John", "Catania");
+    Function<String, Integer> nameMappingFunction = String::length;
+
+    List<Integer> nameLength = names.stream()
+                                    .map(nameMappingFunction)
+                                    .collect(Collectors.toList());
+
+    System.out.println(nameLength);
+}
+У цьому прикладі використано Function для визначення довжини рядків у списку і перетворення їх у список чисел.
+
+Композиція Function:
+Function також має методи для композиції:
+
+default <V> Function<T, V> andThen(Function<? super R, ? extends V> after); — спочатку виконує поточну функцію, потім передає результат у наступну.
+default <V> Function<V, R> compose(Function<? super V, ? extends T> before); — спочатку виконує передану функцію, потім поточну.
+Приклад композиції можна створити, якщо потрібно виконати кілька перетворень над даними.
